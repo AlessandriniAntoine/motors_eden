@@ -72,15 +72,15 @@ class MotorsSync():
             print("Press any key to terminate...")
             quit()
 
-        # Set operating mode to extended position control mode
-        for id in self.ids:
-            dxl_comm_result, dxl_error = self.packetHandler.write1ByteTxRx(self.portHandler, id, self.ADDR_OPERATING_MODE, self.CONTROL_MODE)
-            if dxl_comm_result != COMM_SUCCESS:
-                print("%s" % self.packetHandler.getTxRxResult(dxl_comm_result))
-            elif dxl_error != 0:
-                print("%s" % self.packetHandler.getRxPacketError(dxl_error))
-            else:
-                print("Operating mode changed to extended position control mode.")
+        # # Set operating mode to extended position control mode
+        # for id in self.ids:
+        #     dxl_comm_result, dxl_error = self.packetHandler.write1ByteTxRx(self.portHandler, id, self.ADDR_OPERATING_MODE, self.CONTROL_MODE)
+        #     if dxl_comm_result != COMM_SUCCESS:
+        #         print("%s" % self.packetHandler.getTxRxResult(dxl_comm_result))
+        #     elif dxl_error != 0:
+        #         print("%s" % self.packetHandler.getRxPacketError(dxl_error))
+        #     else:
+        #         print("Operating mode changed to extended position control mode.")
 
         # Enable Dynamixels Torque
         for id in self.ids:
@@ -112,6 +112,7 @@ class MotorsSync():
     ##############################
 
     def write_position(self,positions):
+
         # Allocate goal position value into byte array
         param_goal_position = [[DXL_LOBYTE(DXL_LOWORD(position)), DXL_HIBYTE(DXL_LOWORD(position)), DXL_LOBYTE(DXL_HIWORD(position)), DXL_HIBYTE(DXL_HIWORD(position))] for position in positions]
 

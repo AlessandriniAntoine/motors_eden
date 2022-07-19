@@ -3,10 +3,10 @@ from .submodules.motors import *
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64
+from geometry_msgs.msg import Quaternion
 
 import threading
 import math
-import time
 
 class ROS2Dynamixel(Node):
     """
@@ -26,8 +26,8 @@ class ROS2Dynamixel(Node):
         self.rosRate = self.create_rate(rate)
 
         # set parameters
-        self.declare_parameter('ids',[1,2])
-        self.declare_parameter('gearRatio',[30,20])
+        self.declare_parameter('ids',[1,2,3,4])
+        self.declare_parameter('gearRatio',[80/20,110/25,105/21,50/25])
 
         self.ids = self.get_parameter('ids').get_parameter_value().integer_array_value
         self.gearRatio = self.get_parameter('gearRatio').get_parameter_value().double_array_value
@@ -35,7 +35,7 @@ class ROS2Dynamixel(Node):
         # # deduce parameters
         self.numMotors = len(self.ids)
         self.goalPositions = [0 for _ in self.ids]
-        self.displacements = [0 for _ in self.ids]
+        self.rotations = [0 for _ in self.ids]
 
         # init motors
         self.motors =  MotorsSync(self.ids)
@@ -44,6 +44,8 @@ class ROS2Dynamixel(Node):
         # init topics
         self.initgraph()
 
+        self.orientation = [1,1,-1,1] #to inverse rotation of motor 3
+
     ############################## 
     # ROS Function
     ##############################
@@ -51,11 +53,7 @@ class ROS2Dynamixel(Node):
     def initgraph(self):
         self.pub_current = [self.create_publisher(Float64,'Motor'+str(i)+'/state/current',10)  for i in range(self.numMotors)]
         self.pub_pp = [self.create_publisher(Float64,'Motor'+str(i)+'/state/displacement',10)  for i in range(self.numMotors)]
-        self.sub0 = self.create_subscription(Float64,'Motor0/ref/displacement', self.on_receive_callback0,10)
-        self.sub1 = self.create_subscription(Float64,'Motor1/ref/displacement', self.on_receive_callback1,10)
-        self.sub2 = self.create_subscription(Float64,'Motor2/ref/displacement', self.on_receive_callback2,10)
-        self.sub3 = self.create_subscription(Float64,'Motor3/ref/displacement', self.on_receive_callback3,10)
-
+        self.sub = self.create_subscription(Quaternion,'ref/displacement', self.on_receive_callback,10)
 
     def publish_current(self,data,index):
         msg = Float64()
@@ -68,15 +66,11 @@ class ROS2Dynamixel(Node):
         msg.data = float(data)
         self.pub_pp[index].publish(msg)
 
-    def on_receive_callback0(self,data):
-        self.displacements[0] = data.data
-    def on_receive_callback1(self,data):
-        self.displacements[1] = data.data
-    def on_receive_callback2(self,data):
-        self.displacements[2] = data.data
-    def on_receive_callback3(self,data):
-        self.displacements[3] = data.data
-
+    def on_receive_callback(self,data):
+        self.rotations[0] = data.x
+        self.rotations[1] = data.y
+        self.rotations[2] = data.z
+        self.rotations[3] = data.w
 
     ############################## 
     # Actuate functions
@@ -85,14 +79,14 @@ class ROS2Dynamixel(Node):
     def getGoalPositions(self):
         """ transform displacements of the cable into a rotation of the motor"""
         for i in range(self.numMotors):
-            rotation = self.displacements[i]/self.gearRatio[0]
+            rotation = self.rotations[i]*self.gearRatio[0]
             rotation = rotation*4095/(2*math.pi)
-            self.goalPositions[i] = int(self.initPosition[i]+rotation)
+            self.goalPositions[i] = int(self.initPosition[i]+self.orientation[i]*rotation) 
             
     def actuate(self):
         
         while rclpy.ok():
-            t1 = time.time()
+
             # write position
             self.getGoalPositions()
             self.motors.write_position(self.goalPositions)
@@ -105,7 +99,6 @@ class ROS2Dynamixel(Node):
                 self.publish_current(self.present_current[i],i)
             
             self.rosRate.sleep()
-            print(time.time()-t1)
 
         self.motors.turnOFF()
 
