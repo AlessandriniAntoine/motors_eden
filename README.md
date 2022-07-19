@@ -1,50 +1,22 @@
-# motors_eden
+# ROS2 Package for dynamixel motors
 
-Dynamixel package for Eden Robotics.
+## Description
 
-## Installation
+This package contains one nodes send synchronize data.
 
-First you need to download the Dynamixel sdk repository on you computer and init it.
+## Software version
 
-```console
-~ $ git clone https://github.com/ROBOTIS-GIT/DynamixelSDK.git
-~ $ cd DynamixelSDK/python
-~/DynamixelSDK/python $ python3 setup.py
-```
+The softwares are use with the following version :
 
-Then clone this repository on you workspace. Make the repository and source the setup.
+- ROS 2 Foxy
+- Python 3.7
 
-```console
-~ $ cd eden_ws/src
-~/eden_ws/src $ git clone https://github.com/AlessandriniAntoine/motors_eden.git
-~/eden_ws/src $ cd ..
-~/eden_ws $ catkin_make && source devel/setup.zsh
-```
+## Hardware version
 
-## Run
+For the hardware, you need the following components :
 
-Open a terminal and launch ROS1.
+- Dynamixel XM430-W210-T
+- Dynamixel XL430-W250-T (*2)
+- Dynamixel XC430-W150-T
 
-```console
-~ $ source /opt/ros/noetic/setup.zsh && roscore 
-```
-
-Open an other terminal and source the setup of you workspace and run the package
-
-```console
-~ $ cd eden_ws && source devel/setup.zsh
-~/eden_ws $ rosrun motors motorsNode.py
-```
-
-## Hardware
-
-- U2D2 dynamixel
-- dynamixel XL-430 (*2)
-- dynamixel XM-430
-- dynamixel XC-430
-
-## Software
-
-- Python 3
-- Ros1 noetic
-- Dynamixel sdk
+Some parameters in the motors.py file might need to be change if you don't use the same motors.
